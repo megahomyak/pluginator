@@ -5,39 +5,28 @@ use std::{
 
 use libloading::Library;
 
-macro_rules! prepare_plugin_trait_macro {
-    ($_:tt, $krate:ident) => {
-        #[macro_export]
-        macro_rules! plugin_trait {
-            ($plugin_trait:path) => {
-                #[macro_export]
-                macro_rules! prepare_plugin_implementation_macro {
-                    ($plugin_crate:path) => {
-                        #[macro_export]
-                        macro_rules! plugin_implementation {
-                            ($initializer:expr) => {
-                                #[no_mangle]
-                                pub extern "C" fn get_interface() -> *mut dyn $plugin_crate::$plugin_trait {
-                                    Box::into_raw(Box::new($initializer))
-                                }
-                            };
-                        }
-                    }
-                }
-                prepare_plugin_implementation_macro!($_ $krate);
+#[macro_export]
+macro_rules! plugin_trait {
+    ($plugin_trait:path) => {
+        pub type LoadedPlugin = $crate::LoadedPlugin<dyn $plugin_trait>;
 
-                pub type LoadedPlugin = $crate::LoadedPlugin<dyn $plugin_trait>;
-
-                pub fn load_plugin<Path: AsRef<std::path::Path>>(
-                    path: Path,
-                ) -> Result<$crate::LoadedPlugin<dyn $plugin_trait>, $crate::plugin::LoadingError> {
-                    $crate::plugin::load(path)
-                }
-            };
+        pub fn load_plugin<Path: AsRef<std::path::Path>>(
+            path: Path,
+        ) -> Result<$crate::LoadedPlugin<dyn $plugin_trait>, $crate::plugin::LoadingError> {
+            $crate::plugin::load(path)
         }
     };
 }
-prepare_plugin_trait_macro!($, crate);
+
+#[macro_export]
+macro_rules! plugin_implementation {
+    ($plugin_trait:path, $initializer:expr) => {
+        #[no_mangle]
+        pub extern "C" fn get_interface() -> *mut dyn $plugin_trait {
+            Box::into_raw(Box::new($initializer))
+        }
+    };
+}
 
 pub struct LoadedPlugin<Plugin: ?Sized> {
     library: ManuallyDrop<Library>,
