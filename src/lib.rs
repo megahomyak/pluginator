@@ -8,12 +8,10 @@ use libloading::Library;
 #[macro_export]
 macro_rules! plugin_trait {
     ($plugin_trait:path) => {
-        pub type LoadedPlugin = $crate::LoadedPlugin<dyn $plugin_trait>;
-
-        pub fn load_plugin<Path: AsRef<std::path::Path>>(
+        pub unsafe fn load_plugin<Path: AsRef<std::path::Path>>(
             path: Path,
         ) -> Result<$crate::LoadedPlugin<dyn $plugin_trait>, $crate::plugin::LoadingError> {
-            $crate::plugin::load(path)
+            unsafe { $crate::plugin::load(path) }
         }
     };
 }
@@ -69,7 +67,7 @@ pub mod plugin {
         InterfaceGettingError(libloading::Error),
     }
 
-    pub fn load<Path: AsRef<std::path::Path>, Plugin: ?Sized>(
+    pub unsafe fn load<Path: AsRef<std::path::Path>, Plugin: ?Sized>(
         path: Path,
     ) -> Result<LoadedPlugin<Plugin>, LoadingError> {
         let library =
