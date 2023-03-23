@@ -14,27 +14,33 @@ Wrap the plugin implementation with a `plugin_implementation!` macro. A `get_int
 
 * `app/src/main.rs`:
 
-    fn main() {
-        let plugin = unsafe { app::load_plugin("plugins/libplugin1.so") }.unwrap();
-        plugin.print("hello");
-    }
+```
+fn main() {
+    let plugin = unsafe { app::load_plugin("plugins/libplugin1.so") }.unwrap();
+    plugin.print("hello");
+}
+```
 
 * `app/src/lib.rs`:
 
-    pub trait Plugin: Sync + Send {
-        fn print(&self, message: &str);
-    }
+```
+pub trait Plugin: Sync + Send {
+    fn print(&self, message: &str);
+}
 
-    pluginator::plugin_trait!(Plugin);
+pluginator::plugin_trait!(Plugin);
+```
 
 * `plugin1/src/lib.rs`:
 
-    struct Plugin;
+```
+struct Plugin;
 
-    impl app::Plugin for Plugin {
-        fn print(&self, message: &str) {
-            println!("{}", message);
-        }
+impl app::Plugin for Plugin {
+    fn print(&self, message: &str) {
+        println!("{}", message);
     }
+}
 
-    pluginator::plugin_implementation!(app::Plugin, Plugin);
+pluginator::plugin_implementation!(app::Plugin, Plugin);
+```
